@@ -1,0 +1,41 @@
+# Ignore build artifacts
+/build/
+/bin/
+/obj/
+/out/
+
+# Ignore temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+.vs/
+*.code-workspace
+
+# Ignore CMake build files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Ignore compiled object files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.pdb
+
+# Ignore CMakePresets.json user-specific file
+CMakePresets.json.user

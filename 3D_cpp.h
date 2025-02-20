@@ -1,8 +1,10 @@
-﻿// 3D_cpp.h : Include file for standard system include files,
-// or project specific include files.
-
-#pragma once
+﻿#pragma once
 
 #include <iostream>
-
-// TODO: Reference additional headers your program requires here.
+#include <vector>
+#include <utility>
+#include <algorithm>
+#include <chrono>
+#include <stdio.h>
+#include <cmath>
+#include <Windows.h>

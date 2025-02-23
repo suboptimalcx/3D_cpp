@@ -1,8 +1,11 @@
 # 3D_cpp 
 Controls are extremely basic, w/s -> move forward/backward, a/d -> look left/right, q -> quit the game.
 Early doom-esque 3d ''''engine'''' made using ASCII and the terminal
+<<<<<<< HEAD
 
 Based on the Javidx9 code-it-yourself
+=======
+>>>>>>> c3d6c7796ca0786e322edeec72449416b77c7edf
 ## Project Structure
 
 - `3D_cpp.cpp`: Source code.

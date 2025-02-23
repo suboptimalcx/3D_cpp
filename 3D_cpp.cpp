@@ -141,11 +141,7 @@ int main()
                         if (acos(p.at(1).second) < fBound) bBoundary = true;
                     }
                     if (map[nTestY * MAP_WIDTH + nTestX] == '*') {
-                        //collectible visible
                         bHitCollectible = true;
-                        fDistanceToCollectible = fDistanceToWall; 
-                        // float fCorner1 = (float)nTestX + 1 - fPlayerX;
-                        // float fCorner2 = (float)nTestX + 2 - fPlayerX;
                     }
                 }
             }
@@ -181,14 +177,21 @@ int main()
                     else							nShade = ' ';
                     screen[y * SCREEN_WIDTH + x] = nShade;
                 }
-                if (bHitCollectible && y > nCeiling+fDistanceToCollectible && y <= nFloor-fDistanceToCollectible) {
-                    screen[y * SCREEN_WIDTH + x] = '@'; 
+
+                //looks like dogshit but thats the way the cookie crumbles fuck 
+                int wallHeight = nFloor - nCeiling;
+                int collectibleCeiling = nCeiling + wallHeight / 4;
+                int collectibleFloor   = nFloor - wallHeight / 4; 
+                if (bHitCollectible && y > collectibleCeiling && y <= collectibleFloor) {
+                    screen[y * SCREEN_WIDTH + x] = 'x';
                 }
+                
+                
             }
         }
 
-        if(map[fPlayerY * MAP_WIDTH + fPlayerX] == '*') {
-            map[fPlayerY * MAP_WIDTH + fPlayerX] = '.';
+        if(map[(int) fPlayerY * MAP_WIDTH + fPlayerX] == '*') {
+            map[(int) fPlayerY * MAP_WIDTH + fPlayerX] = '.';
             nScore++;
         }
 

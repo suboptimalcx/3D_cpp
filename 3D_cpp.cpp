@@ -13,7 +13,8 @@ constexpr int DEPTH = 16;
 
 float fPlayerX = 8.0f;
 float fPlayerY = 8.0f;
-float fPlayerA = 0.0f; //angle - the center of where the player is looking
+float fPlayerA = 0.0f;
+int nScore = 0;
 
 int main()
 {
@@ -34,12 +35,12 @@ int main()
     map += L"#........#######";
     map += L"#..#...........#";
     map += L"#..#...........#";
-    map += L"#..............#";
+    map += L"#.........*....#";
     map += L"#..............#";
     map += L"########.......#";
     map += L"#..............#";
     map += L"#..............#";
-    map += L"###########....#";
+    map += L"################";
 
     auto tp1 = chrono::system_clock::now();
     auto tp2 = chrono::system_clock::now();
@@ -89,8 +90,9 @@ int main()
             float fRayAngle = (fPlayerA - FOV / 2.0f) + ((float)x / (float)SCREEN_WIDTH) * FOV;
 
             float fDistanceToWall = 0;
+            float fDistanceToCollectible = 0;
             bool bHitWall = false;
-            //bool bHitCollectible = false;
+            bool bHitCollectible = false;
             bool bBoundary = false;
 
             //unit vectors, when we have the direction the player is looking, we convert it into a cartesian coordinate to determine where the ray goes globally
@@ -120,9 +122,9 @@ int main()
                         */
                         vector<pair<float, float>> p;
 
-                        for (int cx = 0; cx < 2; cx++) {
+                        for (int cx = 0; cx < 2; cx++) { //increment because the corner is basically the cell to the left and right when you look at the map
                             for (int cy = 0; cy < 2; cy++) {
-                                //vector from the player to the corner that was 'hit' with the ray
+                                //vector from the player to the corner that was 'hit' with the ray*
                                 float vx = (float)nTestX + cx - fPlayerX;
                                 float vy = (float)nTestY + cy - fPlayerY;
                                 float distance = sqrt(vx * vx + vy * vy); //distance to the perfect corner
@@ -138,9 +140,13 @@ int main()
                         if (acos(p.at(0).second) < fBound) bBoundary = true;
                         if (acos(p.at(1).second) < fBound) bBoundary = true;
                     }
-                    // else if (map[nTestY * MAP_WIDTH + nTestX] == '*') {
-                        
-                    // }
+                    if (map[nTestY * MAP_WIDTH + nTestX] == '*') {
+                        //collectible visible
+                        bHitCollectible = true;
+                        fDistanceToCollectible = fDistanceToWall; 
+                        // float fCorner1 = (float)nTestX + 1 - fPlayerX;
+                        // float fCorner2 = (float)nTestX + 2 - fPlayerX;
+                    }
                 }
             }
             //illusion of depth, calculate distance to ceiling and floor
@@ -148,6 +154,7 @@ int main()
             //so the further away we are, we see more ceiling. ( ilussion of depth )
             int nCeiling = (float)(SCREEN_HEIGHT / 2.0) - SCREEN_HEIGHT / ((float)fDistanceToWall);
             int nFloor = SCREEN_HEIGHT - nCeiling;
+            int nWallWidth = 1;
 
             short nShade = ' ';
             if (fDistanceToWall <= DEPTH / 4.0f)			nShade = 0x2588;	//close
@@ -174,11 +181,19 @@ int main()
                     else							nShade = ' ';
                     screen[y * SCREEN_WIDTH + x] = nShade;
                 }
+                if (bHitCollectible && y > nCeiling+fDistanceToCollectible && y <= nFloor-fDistanceToCollectible) {
+                    screen[y * SCREEN_WIDTH + x] = '@'; 
+                }
             }
         }
 
+        if(map[fPlayerY * MAP_WIDTH + fPlayerX] == '*') {
+            map[fPlayerY * MAP_WIDTH + fPlayerX] = '.';
+            nScore++;
+        }
+
         //stats
-        swprintf_s(screen, 40, L"X=%3.2f, Y=%3.2f, A=%3.2f FPS=%3.2f ", fPlayerX, fPlayerY, fPlayerA, 1.0f / fElapsedTime);
+        swprintf_s(screen, 50, L"X=%3.2f, Y=%3.2f, A=%3.2f, SCR=%d, FPS=%3.2f ", fPlayerX, fPlayerY, fPlayerA, nScore, 1.0f / fElapsedTime);
 
         //map
         for (int nx = 0; nx < MAP_WIDTH; nx++)

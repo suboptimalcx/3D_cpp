@@ -12,7 +12,7 @@ endif()
 project ("3D_cpp")
 
 # Add source to this project's executable.
-add_executable (3D_cpp "3D_cpp.cpp" "3D_cpp.h")
+add_executable (3D_cpp "src/3D_cpp.cpp" "src/functions.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET 3D_cpp PROPERTY CXX_STANDARD 20)

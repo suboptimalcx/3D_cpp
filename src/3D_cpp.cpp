@@ -1,20 +1,4 @@
-﻿#include "3D_cpp.h"
-
-using namespace std;
-
-constexpr int SCREEN_WIDTH = 120;
-constexpr int SCREEN_HEIGHT = 40;
-
-constexpr int MAP_HEIGHT = 16;
-constexpr int MAP_WIDTH = 16;
-
-constexpr float FOV = 3.14f / 4.0f;
-constexpr int DEPTH = 16;
-
-float fPlayerX = 8.0f;
-float fPlayerY = 8.0f;
-float fPlayerA = 0.0f;
-int nScore = 0;
+﻿#include "functions.h"
 
 int main()
 {
@@ -35,7 +19,7 @@ int main()
     map += L"#........#######";
     map += L"#..#...........#";
     map += L"#..#...........#";
-    map += L"#.........*....#";
+    map += L"#..............#";
     map += L"#..............#";
     map += L"########.......#";
     map += L"#..............#";
@@ -88,24 +72,19 @@ int main()
             //starts from the leftmost columns, and calculates its angle
             //fov is being split in the middle by playerAngle so the leftmost is fPlayerA0-fFOV/2 and the rightmost fPlayerA0+fFOV/2
             float fRayAngle = (fPlayerA - FOV / 2.0f) + ((float)x / (float)SCREEN_WIDTH) * FOV;
-
             float fDistanceToWall = 0;
             float fDistanceToCollectible = 0;
             bool bHitWall = false;
             bool bHitCollectible = false;
             bool bBoundary = false;
-
             //unit vectors, when we have the direction the player is looking, we convert it into a cartesian coordinate to determine where the ray goes globally
             float fEyeX = sinf(fRayAngle);
             float fEyeY = cosf(fRayAngle);
 
             while (!bHitWall && fDistanceToWall < DEPTH) {
-
                 fDistanceToWall += 0.1f;
-
                 int nTestX = (int)(fPlayerX + fEyeX * fDistanceToWall);
                 int nTestY = (int)(fPlayerY + fEyeY * fDistanceToWall);
-
                 //OP OOB RAY CHECK
                 if (nTestX < 0 || nTestX >= MAP_WIDTH || nTestY < 0 || nTestY >= MAP_HEIGHT) {
                     bHitWall = true;
@@ -114,34 +93,11 @@ int main()
                 else {
                     if (map[nTestY * MAP_WIDTH + nTestX] == '#') {
                         bHitWall = true;
-
-                        /*
-                        cast a ray from each perfect corner of the cell back to the player
-                        look at the angle between the ray thats been cast out, and that perfect ray back
-                        we want the two closest (i.e the 2 smallest angles) to represent the boundary
-                        */
-                        vector<pair<float, float>> p;
-
-                        for (int cx = 0; cx < 2; cx++) { //increment because the corner is basically the cell to the left and right when you look at the map
-                            for (int cy = 0; cy < 2; cy++) {
-                                //vector from the player to the corner that was 'hit' with the ray*
-                                float vx = (float)nTestX + cx - fPlayerX;
-                                float vy = (float)nTestY + cy - fPlayerY;
-                                float distance = sqrt(vx * vx + vy * vy); //distance to the perfect corner
-                                float dot = (fEyeX * vx / distance) + (fEyeY * vy / distance); //the angle between the two
-                                p.push_back(make_pair(distance, dot));
-                            }
-                        }
-                        //sort pairs from closest to farthest
-                        sort(p.begin(), p.end(), [](const pair<float, float>& left, const pair<float, float>& right) {return left.first < right.first; });
-
-                        //
-                        float fBound = 0.01;
-                        if (acos(p.at(0).second) < fBound) bBoundary = true;
-                        if (acos(p.at(1).second) < fBound) bBoundary = true;
+                        detectBoundry(bHitWall, bBoundary, nTestX, nTestY, fEyeX, fEyeY);
                     }
                     if (map[nTestY * MAP_WIDTH + nTestX] == '*') {
                         bHitCollectible = true;
+                        fDistanceToCollectible = fDistanceToWall; 
                     }
                 }
             }
@@ -151,49 +107,23 @@ int main()
             int nCeiling = (float)(SCREEN_HEIGHT / 2.0) - SCREEN_HEIGHT / ((float)fDistanceToWall);
             int nFloor = SCREEN_HEIGHT - nCeiling;
             int nWallWidth = 1;
-
             short nShade = ' ';
             if (fDistanceToWall <= DEPTH / 4.0f)			nShade = 0x2588;	//close
             else if (fDistanceToWall < DEPTH / 3.0f)		nShade = 0x2593;
             else if (fDistanceToWall < DEPTH / 2.0f)		nShade = 0x2592;
             else if (fDistanceToWall < DEPTH)				nShade = 0x2591;
             else											nShade = ' ';		//far
-
             if (bBoundary) nShade = ' ';
 
-            for (int y = 0; y < SCREEN_HEIGHT; y++) {
-                if (y <= nCeiling) { //ceiling
-                    screen[y * SCREEN_WIDTH + x] = ' ';
-                }
-                else if (y > nCeiling && y <= nFloor) { //wall
-                    screen[y * SCREEN_WIDTH + x] = nShade;
-                }
-                else { //floor
-                    float fFloorDist = 1.0f - (((float)y - SCREEN_HEIGHT / 2.0f) / ((float)SCREEN_HEIGHT / 2.0f));
-                    if (fFloorDist < 0.25)			nShade = '#';
-                    else if (fFloorDist < 0.5)		nShade = 'x';
-                    else if (fFloorDist < 0.75)		nShade = '.';
-                    else if (fFloorDist < 0.9)		nShade = '-';
-                    else							nShade = ' ';
-                    screen[y * SCREEN_WIDTH + x] = nShade;
-                }
-
-                //looks like dogshit but thats the way the cookie crumbles fuck 
-                int wallHeight = nFloor - nCeiling;
-                int collectibleCeiling = nCeiling + wallHeight / 4;
-                int collectibleFloor   = nFloor - wallHeight / 4; 
-                if (bHitCollectible && y > collectibleCeiling && y <= collectibleFloor) {
-                    screen[y * SCREEN_WIDTH + x] = 'x';
-                }
-                
-                
+            for (int y = 0; y < SCREEN_HEIGHT; y++) {     
+                drawCol(y, x, fDistanceToWall, screen, nCeiling, nFloor, nShade);                     
             }
         }
 
-        if(map[(int) fPlayerY * MAP_WIDTH + fPlayerX] == '*') {
-            map[(int) fPlayerY * MAP_WIDTH + fPlayerX] = '.';
-            nScore++;
-        }
+        // if(map[(int) fPlayerY * MAP_WIDTH + fPlayerX] == '*') {
+        //     map[(int) fPlayerY * MAP_WIDTH + fPlayerX] = '.';
+        //     nScore++;
+        // }
 
         //stats
         swprintf_s(screen, 50, L"X=%3.2f, Y=%3.2f, A=%3.2f, SCR=%d, FPS=%3.2f ", fPlayerX, fPlayerY, fPlayerA, nScore, 1.0f / fElapsedTime);

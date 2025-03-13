@@ -1,4 +1,4 @@
-﻿#include "functions.h"
+﻿#include "utils.h"
 
 int main()
 {
@@ -7,66 +7,17 @@ int main()
     HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL); //screen buffer to be written into
     SetConsoleActiveScreenBuffer(hConsole);
     DWORD dwBytesWritten = 0;
-
-    wstring map;
-    map += L"################";
-    map += L"#......#.......#";
-    map += L"#......#.......#";
-    map += L"#......#.......#";
-    map += L"#......#....####";
-    map += L"#..............#";
-    map += L"#..............#";
-    map += L"#........#######";
-    map += L"#..#...........#";
-    map += L"#..#...........#";
-    map += L"#..............#";
-    map += L"#..............#";
-    map += L"########.......#";
-    map += L"#..............#";
-    map += L"#..............#";
-    map += L"################";
-
     auto tp1 = chrono::system_clock::now();
     auto tp2 = chrono::system_clock::now();
-
 	bool bExit = false;
 
     while (!bExit) {
-
         tp2 = chrono::system_clock::now();
         chrono::duration<float> elapsedTime = tp2 - tp1;
         tp1 = tp2;
         float fElapsedTime = elapsedTime.count();
-
         //CONTROLS
-        if (GetAsyncKeyState((unsigned short)'A') & 0x8000) {
-            fPlayerA -= (1.3f) * fElapsedTime;
-        }
-        if (GetAsyncKeyState((unsigned short)'D') & 0x8000) {
-            fPlayerA += (1.3f) * fElapsedTime;
-        }
-        if (GetAsyncKeyState((unsigned short)'W') & 0x8000) {
-            fPlayerX += sinf(fPlayerA) * 5.0f * fElapsedTime;
-            fPlayerY += cosf(fPlayerA) * 5.0f * fElapsedTime;
-
-            if (map[(int)fPlayerY * MAP_WIDTH + (int)fPlayerX] == '#') { //collision detection
-                fPlayerX -= sinf(fPlayerA) * 5.0f * fElapsedTime;
-                fPlayerY -= cosf(fPlayerA) * 5.0f * fElapsedTime;
-            }
-
-        }
-        if (GetAsyncKeyState((unsigned short)'S') & 0x8000) {
-            fPlayerX -= sinf(fPlayerA) * 5.0f * fElapsedTime;
-            fPlayerY -= cosf(fPlayerA) * 5.0f * fElapsedTime;
-
-            if (map[(int)fPlayerY * MAP_WIDTH + (int)fPlayerX] == '#') { //collision detection
-                fPlayerX += sinf(fPlayerA) * 5.0f * fElapsedTime;
-                fPlayerY += cosf(fPlayerA) * 5.0f * fElapsedTime;
-            }
-        }
-		if (GetAsyncKeyState((unsigned short)'Q') & 0x8000) {
-			bExit = true;
-        }
+        playerMovement(fElapsedTime, bExit);
 
         for (int x = 0; x < SCREEN_WIDTH; x++) {
             //starts from the leftmost columns, and calculates its angle
@@ -93,7 +44,7 @@ int main()
                 else {
                     if (map[nTestY * MAP_WIDTH + nTestX] == '#') {
                         bHitWall = true;
-                        detectBoundry(bHitWall, bBoundary, nTestX, nTestY, fEyeX, fEyeY);
+                        detectBoundry(bBoundary, nTestX, nTestY, fEyeX, fEyeY);
                     }
                     if (map[nTestY * MAP_WIDTH + nTestX] == '*') {
                         bHitCollectible = true;
@@ -101,22 +52,8 @@ int main()
                     }
                 }
             }
-            //illusion of depth, calculate distance to ceiling and floor
-            //ceiling = midpoint - proprtion of the screenheight proportionate to the distance to wall
-            //so the further away we are, we see more ceiling. ( ilussion of depth )
-            int nCeiling = (float)(SCREEN_HEIGHT / 2.0) - SCREEN_HEIGHT / ((float)fDistanceToWall);
-            int nFloor = SCREEN_HEIGHT - nCeiling;
-            int nWallWidth = 1;
-            short nShade = ' ';
-            if (fDistanceToWall <= DEPTH / 4.0f)			nShade = 0x2588;	//close
-            else if (fDistanceToWall < DEPTH / 3.0f)		nShade = 0x2593;
-            else if (fDistanceToWall < DEPTH / 2.0f)		nShade = 0x2592;
-            else if (fDistanceToWall < DEPTH)				nShade = 0x2591;
-            else											nShade = ' ';		//far
-            if (bBoundary) nShade = ' ';
-
             for (int y = 0; y < SCREEN_HEIGHT; y++) {     
-                drawCol(y, x, fDistanceToWall, screen, nCeiling, nFloor, nShade);                     
+                drawCol(y, x, fDistanceToWall, screen, bBoundary);                     
             }
         }
 

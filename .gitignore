@@ -37,5 +37,5 @@ Makefile
 *.a
 *.pdb
 
-# Ignore CMakePresets.json user-specific file
 CMakePresets.json.user
+CMakePresets.json

@@ -24,27 +24,27 @@ wstring map =
     L"################";
 
 void drawCol(const int &y, const int& x, const float& fDistanceToWall, wchar_t* screen, const bool& bBoundary) {
-    //illusion of depth, calculate distance to ceiling and floor
-    //ceiling = midpoint - proprtion of the screenheight proportionate to the distance to wall
-    //so the further away we are, we see more ceiling. ( ilussion of depth )
+    // illusion of depth, calculate distance to ceiling and floor
+    // ceiling = midpoint - proprtion of the screenheight proportionate to the distance to wall
+    // so the further away we are, we see more ceiling. ( ilussion of depth )
     int nCeiling = (float)(SCREEN_HEIGHT / 2.0) - SCREEN_HEIGHT / ((float)fDistanceToWall);
     int nFloor = SCREEN_HEIGHT - nCeiling;
     int nWallWidth = 1;
     short nShade = ' ';
 
-    if (y <= nCeiling) { //ceiling
+    if (y <= nCeiling) { // ceiling
         screen[y * SCREEN_WIDTH + x] = ' ';
     }
-    else if (y > nCeiling && y <= nFloor) { //wall
-        if (fDistanceToWall <= DEPTH / 4.0f)			nShade = 0x2588;	//close
+    else if (y > nCeiling && y <= nFloor) { // wall
+        if (fDistanceToWall <= DEPTH / 4.0f)			nShade = 0x2588;	// close
         else if (fDistanceToWall < DEPTH / 3.0f)		nShade = 0x2593;
         else if (fDistanceToWall < DEPTH / 2.0f)		nShade = 0x2592;
         else if (fDistanceToWall < DEPTH)				nShade = 0x2591;
-        else											nShade = ' ';		//far
+        else											nShade = ' ';		// far
         if (bBoundary) nShade = ' ';
         screen[y * SCREEN_WIDTH + x] = nShade;
     }
-    else { //floor
+    else { // floor
         float fFloorDist = 1.0f - (((float)y - SCREEN_HEIGHT / 2.0f) / ((float)SCREEN_HEIGHT / 2.0f));
         if (fFloorDist < 0.25)			nShade = '#';
         else if (fFloorDist < 0.5)		nShade = 'x';
@@ -67,20 +67,19 @@ void detectBoundry(bool& bBoundary, const int& nTestX, const int& nTestY, const 
     */
     vector<pair<float, float>> p;
 
-    for (int cx = 0; cx < 2; cx++) { //increment because the corner is basically the cell to the left and right when you look at the map
+    for (int cx = 0; cx < 2; cx++) { // increment because the corner is basically the cell to the left and right when you look at the map
         for (int cy = 0; cy < 2; cy++) {
-            //vector from the player to the corner that was 'hit' with the ray*
+            // vector from the player to the corner that was 'hit' with the ray*
             float vx = (float)nTestX + cx - fPlayerX;
             float vy = (float)nTestY + cy - fPlayerY;
-            float distance = sqrt(vx * vx + vy * vy); //distance to the perfect corner
-            float dot = (fEyeX * vx / distance) + (fEyeY * vy / distance); //the angle between the two
+            float distance = sqrt(vx * vx + vy * vy); // distance to the perfect corner
+            float dot = (fEyeX * vx / distance) + (fEyeY * vy / distance); // the angle between the two
             p.push_back(make_pair(distance, dot));
         }
     }
-    //sort pairs from closest to farthest
+    // sort pairs from closest to farthest
     sort(p.begin(), p.end(), [](const pair<float, float>& left, const pair<float, float>& right) {return left.first < right.first; });
 
-    //
     float fBound = 0.01;
     if (acos(p.at(0).second) < fBound) bBoundary = true;
     if (acos(p.at(1).second) < fBound) bBoundary = true;
